@@ -14,9 +14,7 @@ GameSceneManager::~GameSceneManager()
 	safe_delete(fbxObject1);
 	safe_delete(model1);
 	safe_delete(mapStage);
-	safe_delete(player);
-	safe_delete(enemy);
-	safe_delete(stage);
+	safe_delete(bullet);
 	//XAudio2解放
 	audio->xAudio2.Reset();
 	//音データ解放
@@ -24,7 +22,7 @@ GameSceneManager::~GameSceneManager()
 	Audio::SoundUnload(&sound2);
 	safe_delete(audio);
 }
-void GameSceneManager::Initialize(_DirectX *directX)
+void GameSceneManager::Initialize(_DirectX* directX)
 {
 	assert(directX);
 	this->directX = directX;
@@ -46,9 +44,6 @@ void GameSceneManager::Initialize(_DirectX *directX)
 	ParticleManager::SetCamera(camera);
 	//パーティクルクラス作成
 	particleMan = ParticleManager::Create();
-
-
-
 	//ライトグループクラス作成
 	lightGroup = LightGroup::Create();
 	//デバックテキスト初期化
@@ -61,13 +56,6 @@ void GameSceneManager::Init()
 {
 	//音データ読み込み
 	sound1 = Audio::SoundLoadWave("Resources/i.wav");
-	//sound2 = Audio::SoundLoadWave("Resources/BGM.wav");
-	
-	//読み込んだ音データを1回だけ流す
-	//sound->SoundSEPlayWave(sound1);
-	
-	//読み込んだ音データをループで流す
-	//sound->SoundBGMPlayLoopWave(sound2, sound->BGM);
 
 	// 3Dオブエクトにライトをセット
 	//Object3d::SetLightGroup(lightGroup);
@@ -81,84 +69,49 @@ void GameSceneManager::Init()
 	lightGroup->SetCircleShadowActive(0, false);
 
 	//カメラ位置をセット
-	camera->SetCamera(Vec3{ 0,0,-200 }, Vec3{ 0, 0, 0 }, Vec3{ 0, 1, 0 });
+	camera->SetCamera(Vec3{ 0,0,-100 }, Vec3{ 0, 0, 0 }, Vec3{ 0, 1, 0 });
 
 	//スプライト画像読み込み
-	spriteGraph = Sprite::Instance()-> SpriteCreate(L"Resources/text2.jpg");
 	BGGraph = Sprite::Instance()->SpriteCreate(L"Resources/backgroundA.png");
-	Parent = Sprite::Instance()->SpriteCreate(L"Resources/text2.jpg");
-
+	operationGraph = Sprite::Instance()->SpriteCreate(L"Resources/Operation.png");
 	//3Dオブジェクト画像読み込み
 	graph3 = Texture::Instance()->LoadTexture(L"Resources/white1x1.png");
 	graph1 = Texture::Instance()->LoadTexture(L"Resources/texture2.jpg");
 
 	particleGraph = Texture::Instance()->LoadTexture(L"Resources/particle.jpg");
-	
-	//3Dobjファイル読み込み。
-	Polygon = Object::Instance()->CreateOBJ("Boss");
-	BossPolygon = Object::Instance()->CreateOBJ("sphere", true);
 
-	//Shapeクラスに決まった形のオブジェクトを作成	
-	//Polygon = Shape::CreateSquare(20.0f, 20.0f, 20.0f);
-
-	//モデル名を指定してファイル読み込み
-	model1 = FbxLoader::GetInstance()->LoadModelFromFile("boneTest");
-
-	//3Dオブジェクトの生成とモデルのセット
-	fbxObject1 = new FBXObject3d;
-	fbxObject1->Initialize();
-	fbxObject1->SetModel(model1);
-	
-	//マップチップの初期化
-	mapStage = new MapStage;
-	mapStage->Init();
-	//プレイヤーの初期化
-	player = new Player;
-	player->Init();
-	//敵
-	enemy = new Enemy;
-	enemy->Init();
-	//ステージ
-	stage = new Stage;
-	stage->Init();
+	bullet = new Bullet();
+	bullet->Load();
 }
 
 void GameSceneManager::Update()
 {
-	//キー入力
-	//Inputクラスにマウスとコントローラもあるよ
-	//インスタンス化してるのでInput/Input.h"を持ってくればどのクラスでも使えるよ
-	if (Input::Instance()->KeybordPush(DIK_UP))
-	{		
-	//	fbxObject1->PlayAnimation();
-	}
-	if (Input::Instance()->KeybordPush(DIK_DOWN))
+	//リセット
+	if (Input::Instance()->KeybordPush(DIK_R))
 	{
+		bullet->Init(number);
 	}
-	if (Input::Instance()->KeybordPush(DIK_LEFT))
+
+	if (Input::Instance()->KeybordTrigger(DIK_LEFT)|| Input::Instance()->KeybordTrigger(DIK_A))
 	{
+		number -= 1;
+		if (number < 1)
+		{
+			number = 1;
+		}
+		bullet->Init(number);
 	}
-	if (Input::Instance()->KeybordPush(DIK_RIGHT))
+	if (Input::Instance()->KeybordTrigger(DIK_RIGHT)|| Input::Instance()->KeybordTrigger(DIK_D))
 	{
+		number += 1;
+		if (number > 2)
+		{
+			number = 2;
+		}
+		bullet->Init(number);
 	}
-	//プレイヤーの更新
-	player->Update(enemy);
 
-	enemy->Update(player);
-
-	stage->Update();
-
-	//マップチップとプレイヤーの押し戻し処理
-	//PushCollision::Player2Mapchip(player, mapStage);
-	
-	PushCollision::Player2Floor(stage, player);
-
-	//fbxObject1->Update();
-	//
-	camera->FollowCamera(player->GetPosition(), Vec3{ 0,20,-100 });
-
-	//パーティクル追加
-	particleMan->ParticleAdd(player->GetPosition(),Vec4(1.0f, 1.0f, 1.0f, 1.0f),Vec4(1.0f,1.0f,1.0f,1.0f));
+	bullet->Update(number);
 	//パーティクル更新
 	particleMan->Update();
 	//ライト更新
@@ -173,31 +126,26 @@ void GameSceneManager::Draw()
 
 	//背景描画
 	//Drawにカーソル合わせればコメントアウトしてあるからなにがどの変数かわかるよ
-	Sprite::Instance()->Draw(BGGraph,pos, window_width, window_height);
+//	Sprite::Instance()->Draw(BGGraph, pos, window_width, window_height);
 
 	//オブジェクト
-	//Object::Instance()->Draw(Polygon, pPos1, Vec3{ 5.0f,5.0f,5.0f }, angle, Vec4{ 1.0f,1.0f,1.0f ,1.0f });
-	
-	//マップチップの描画
-	//mapStage->Draw();
-	//プレイヤーの描画
-	player->Draw();
-
-	enemy->Draw();
-
-	stage->Draw();
-
-	//fbxObject1->Draw();
-
-
+	bullet->Draw();
 	//パーティクル描画
 	particleMan->Draw(particleGraph);
 
 	//前景描画
-	Sprite::Instance()->Draw(spriteGraph, Vec2(400, 400), 100, 100, Vec2(0.5f, 0.5f));
-
 	//デバックテキスト%dと%f対応
-	debugText.Print(1, 120, 2, "E:button");
+
+	Sprite::Instance()->Draw(operationGraph, Vec2(0.0f, 0.0f), 300, 100);
+	if (number == 1)
+	{
+		debugText.Print(20, 120, 2, "%d:Fall", number);
+	}
+	else if (number == 2)
+	{
+		debugText.Print(20, 120, 2, "%d:Cannon", number);
+	}
+	
 
 	//デバックテキスト描画ここは変わらない
 	debugText.DrawAll();

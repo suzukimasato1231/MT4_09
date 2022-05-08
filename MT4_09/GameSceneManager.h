@@ -10,10 +10,7 @@
 #include"Sprite.h"
 #include "Object.h"
 #include"MapStage.h"
-#include"Player.h"
-#include"PushCollision.h"
-#include"Enemy.h"
-#include"Stage.h"
+#include"Bullet.h"
 
 extern const int window_width;
 extern const int window_height;
@@ -47,9 +44,8 @@ private://定義
 	Audio::SoundData sound2;
 
 	//スプライトデータ
-	Sprite::SpriteData spriteGraph;
+	Sprite::SpriteData operationGraph;
 	Sprite::SpriteData BGGraph;
-	Sprite::SpriteData Parent;
 
 	//オブジェクトデータ
 	Object::ObjectData Polygon;
@@ -75,16 +71,11 @@ private://定義
 
 	//マップチップ
 	MapStage *mapStage = nullptr;
-
-	//プレイヤー
-	Player *player = nullptr;
-
-	//エネミー
-	Enemy *enemy = nullptr;
-
-	Stage *stage = nullptr;
-
 	//FBX
 	Model *model1 = nullptr;
 	FBXObject3d *fbxObject1 = nullptr;
+
+	Bullet* bullet = nullptr;
+
+	int number = 1;
 };
