@@ -76,6 +76,4 @@ private://’è‹`
 	FBXObject3d *fbxObject1 = nullptr;
 
 	Bullet* bullet = nullptr;
-
-	int number = 1;
 };

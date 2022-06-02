@@ -69,7 +69,7 @@ void GameSceneManager::Init()
 	lightGroup->SetCircleShadowActive(0, false);
 
 	//カメラ位置をセット
-	camera->SetCamera(Vec3{ 0,0,-100 }, Vec3{ 0, 0, 0 }, Vec3{ 0, 1, 0 });
+	camera->SetCamera(Vec3{ 0,0,-200 }, Vec3{ 0, 0, 0 }, Vec3{ 0, 1, 0 });
 
 	//スプライト画像読み込み
 	BGGraph = Sprite::Instance()->SpriteCreate(L"Resources/backgroundA.png");
@@ -86,32 +86,9 @@ void GameSceneManager::Init()
 
 void GameSceneManager::Update()
 {
-	//リセット
-	if (Input::Instance()->KeybordPush(DIK_R))
-	{
-		bullet->Init(number);
-	}
+	
 
-	if (Input::Instance()->KeybordTrigger(DIK_LEFT)|| Input::Instance()->KeybordTrigger(DIK_A))
-	{
-		number -= 1;
-		if (number < 1)
-		{
-			number = 1;
-		}
-		bullet->Init(number);
-	}
-	if (Input::Instance()->KeybordTrigger(DIK_RIGHT)|| Input::Instance()->KeybordTrigger(DIK_D))
-	{
-		number += 1;
-		if (number > 2)
-		{
-			number = 2;
-		}
-		bullet->Init(number);
-	}
-
-	bullet->Update(number);
+	bullet->Update();
 	//パーティクル更新
 	particleMan->Update();
 	//ライト更新
@@ -137,14 +114,7 @@ void GameSceneManager::Draw()
 	//デバックテキスト%dと%f対応
 
 	Sprite::Instance()->Draw(operationGraph, Vec2(0.0f, 0.0f), 300, 100);
-	if (number == 1)
-	{
-		debugText.Print(20, 120, 2, "%d:Fall", number);
-	}
-	else if (number == 2)
-	{
-		debugText.Print(20, 120, 2, "%d:Cannon", number);
-	}
+	
 	
 
 	//デバックテキスト描画ここは変わらない
